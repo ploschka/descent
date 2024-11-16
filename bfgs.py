@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.optimize as sopt
 
 true_results = [
     (-100, 7.534424797774636),
@@ -143,28 +144,31 @@ max_iter = 10000
 
 params = np.array([-7, -np.pi / 4, 5, -7, -np.pi / 4, 5, 3, -1])
 
-history = []
+a = sopt.minimize(loss, params, jac=loss_gradient, tol=epsilon)
+print(a)
 
-for _ in range(max_iter):
-    loss_sum = loss(params).sum()
-    history.append(loss_sum)
-    if loss_sum > epsilon:
-        grad = loss_gradient(params)
-        params -= rate * grad
-    else:
-        break
-
-print(history[-1])
-print(params)
+# history = []
+#
+# for _ in range(max_iter):
+#     loss_sum = loss(params).sum()
+#     history.append(loss_sum)
+#     if loss_sum > epsilon:
+#         grad = loss_gradient(params)
+#         params -= rate * grad
+#     else:
+#         break
+#
+# print(history[-1])
+# print(params)
 new_x = np.linspace(-100, 100, 1001)
 
 fig, ax = plt.subplots(2, 1, figsize=(5, 7))
 ax[0].plot(x_true, y_true, 'o')
-ax[0].plot(new_x, our_function(new_x, params))
+ax[0].plot(new_x, our_function(new_x, a.x))
 
-ax[1].plot(history)
-ax[1].set_title("Loss function")
-ax[1].set_xlabel("Iteration")
-ax[1].set_ylabel("Loss")
+# ax[1].plot(history)
+# ax[1].set_title("Loss function")
+# ax[1].set_xlabel("Iteration")
+# ax[1].set_ylabel("Loss")
 
 plt.show()
