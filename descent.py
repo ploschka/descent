@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import trange
 
 true_results = [
     (-100, 7.534424797774636),
@@ -137,34 +138,43 @@ def loss_gradient(params: np.ndarray):
     return (2 * (our_function(x_true, params) - y_true) * our_function_grad).sum(axis=1)
 
 
-rate = 0.000001
-epsilon = 0.001
-max_iter = 10000
+learning_rate = 0.001
+beta1 = 0.99
+beta2 = 0.99
+max_grad_norm = 0.00001
+epsilon = 0.00001
+max_iter = 5000
 
-params = np.array([-7, -np.pi / 4, 5, -7, -np.pi / 4, 5, 3, -1])
+results = []
 
-history = []
-
-for _ in range(max_iter):
-    loss_sum = loss(params).sum()
-    history.append(loss_sum)
-    if loss_sum > epsilon:
+start_params = np.array([5.2655514608053675, -0.20016549741595413, 0.14092395097612467, 4.982249813545512, 0.10016952205023934,
+                -0.008110735772435698, -0.049515673477867866, 0.016892584864522685]
+)
+for _ in trange(10):
+    # params = (np.random.random(8) - 0.5)
+    params = start_params.copy()
+    v = np.zeros_like(params)
+    m = np.zeros_like(params)
+    for i in range(1, max_iter + 1):
         grad = loss_gradient(params)
-        params -= rate * grad
-    else:
-        break
+        if np.linalg.norm(grad) > max_grad_norm:
+            m = beta1 * m + (1 - beta1) * grad
+            v = beta2 * v + (1 - beta2) * grad ** 2
+            m_hat = m / (1 - beta1 ** i)
+            v_hat = v / (1 - beta2 ** i)
+            params -= learning_rate / (np.sqrt(v_hat) + epsilon) * m_hat
+        else:
+            print("Reached low gradient")
+            break
+    results.append((loss(params), list(params)))
 
-print(history[-1])
-print(params)
+results.sort()
+print(results)
+print(results[0])
+params = np.array(results[0][1])
+
 new_x = np.linspace(-100, 100, 1001)
-
-fig, ax = plt.subplots(2, 1, figsize=(5, 7))
-ax[0].plot(x_true, y_true, 'o')
-ax[0].plot(new_x, our_function(new_x, params))
-
-ax[1].plot(history)
-ax[1].set_title("Loss function")
-ax[1].set_xlabel("Iteration")
-ax[1].set_ylabel("Loss")
+plt.plot(x_true, y_true, 'o')
+plt.plot(new_x, our_function(new_x, params))
 
 plt.show()
